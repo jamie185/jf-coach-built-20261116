@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ava Trainer Thread</title>
+<style>
+:root{--t-canvas:#f2f2f7;--t-group:#ffffff;--t-card:#e9eef6;--t-ink:#000;--t-ink2:rgba(60,60,67,.76);--t-sep:rgba(60,60,67,.18);--t-accent:#0a5fc8;--t-alert-ink:#d23b17;--me:#0a5fc8;--me-ink:#fff;--page:#e6e9ef;--navy:#141742}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--t-canvas:#000;--t-group:#1c1c1e;--t-card:#2c2c2e;--t-ink:#fff;--t-ink2:rgba(235,235,245,.66);--t-sep:rgba(84,84,88,.6);--t-accent:#3b9bff;--t-alert-ink:#ff7a5c;--me:#2f7de1;--page:#111}}
+:root[data-theme="dark"]{--t-canvas:#000;--t-group:#1c1c1e;--t-card:#2c2c2e;--t-ink:#fff;--t-ink2:rgba(235,235,245,.66);--t-sep:rgba(84,84,88,.6);--t-accent:#3b9bff;--t-alert-ink:#ff7a5c;--me:#2f7de1;--page:#111}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--t-ink);font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:14px 16px;max-width:1240px;margin:0 auto}
+.bar h1{font-size:17px;margin:0 12px 0 0}
+.bar button{border:0;border-radius:999px;padding:8px 14px;background:var(--t-group);color:var(--t-ink);font-weight:600;cursor:pointer}
+.bar button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.note{font-size:13px;color:var(--t-ink2);max-width:1240px;margin:0 auto;padding:0 16px 10px}
+.stage{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;padding:8px 16px 40px}
+.dev{background:var(--t-canvas);border-radius:34px;box-shadow:0 18px 50px -20px rgba(0,0,0,.4);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1b1b1f}
+.phone{width:390px;height:780px;max-width:calc(100vw - 32px)}
+.ipad{width:820px;height:780px;max-width:calc(100vw - 32px);border-radius:26px}
+.ipad .split{display:grid;grid-template-columns:340px 1fr;height:100%}
+.ipad .split>section{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--t-sep)}
+.screen{display:flex;flex-direction:column;flex:1;min-height:0}
+.hdr{padding:18px 16px 6px}.hdr h2{margin:0;font-size:30px;font-weight:800;letter-spacing:-.02em}.hdr .sub{font-size:13px;color:var(--t-ink2)}
+.search{margin:8px 16px 0;background:var(--t-card);border-radius:12px;padding:9px 12px;color:var(--t-ink2);font-size:15px}
+.seg{display:flex;margin:10px 16px 0;background:var(--t-card);border-radius:10px;padding:2px}.seg span{flex:1;text-align:center;padding:6px;border-radius:8px;font-size:13px;font-weight:600}.seg .on{background:var(--t-group);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.list{overflow:auto;flex:1;padding:14px 16px 20px}
+.group{background:var(--t-group);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:0;background:none;width:100%;text-align:left;color:inherit;cursor:pointer;font:inherit;position:relative}
+.row+.row::before{content:"";position:absolute;left:72px;right:0;top:0;height:1px;background:var(--t-sep)}
+.row[data-sel="1"]{background:var(--t-card)}
+.av{width:46px;height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex:none;font-weight:700;background:var(--t-card);color:var(--t-ink2)}
+.ava{background:#141742;color:#fff;font-weight:800}
+.mid{flex:1;min-width:0}.nm{display:flex;gap:8px;align-items:baseline}.nm b{flex:1;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nm time{font-size:13px;color:var(--t-ink2)}
+.last{font-size:14px;color:var(--t-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row[data-unread="1"] .nm b::after{content:"";display:inline-block;width:9px;height:9px;border-radius:9px;background:var(--t-accent);margin-left:8px;vertical-align:middle}
+.chev{color:var(--t-ink2);opacity:.5}
+.nav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;height:56px;padding:0 8px;border-bottom:1px solid var(--t-sep);background:var(--t-group)}
+.nav button{border:0;background:none;color:var(--t-accent);font-size:28px;cursor:pointer;height:44px}
+.ttl{text-align:center}.ttl b{display:block;font-size:16px}.ttl span{font-size:12px;color:var(--t-ink2)}
+.thread{flex:1;overflow:auto;padding:14px 16px 10px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;align-items:flex-end;gap:10px}.msg.me{justify-content:flex-end}
+.bub{max-width:78%;padding:9px 14px;border-radius:18px;background:var(--t-card);white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.me .bub{background:var(--me);color:var(--me-ink);border-bottom-right-radius:5px}.msg:not(.me) .bub{border-bottom-left-radius:5px}
+.msg .av{width:30px;height:30px;font-size:13px}
+.meta{font-size:12px;color:var(--t-ink2);margin-top:3px;padding:0 4px}.meta.r{text-align:right}
+.fail{font-size:13px;font-weight:600;color:var(--t-alert-ink);text-align:right;background:none;border:0;width:100%;cursor:pointer}
+.empty{text-align:center;color:var(--t-ink2);padding:30px 12px;line-height:1.45}
+.typing .bub{display:flex;gap:5px;padding:13px 16px}.typing i{width:7px;height:7px;border-radius:7px;background:var(--t-ink2);animation:b 1s infinite}.typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
+@keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}@media (prefers-reduced-motion:reduce){.typing i{animation:none}}
+.comp{display:flex;gap:8px;padding:8px 12px 14px;border-top:1px solid var(--t-sep);background:var(--t-group)}
+.comp textarea{flex:1;resize:none;border:1px solid var(--t-sep);border-radius:20px;padding:9px 14px;font:inherit;background:var(--t-canvas);color:var(--t-ink);height:40px}
+.comp button{border:0;border-radius:999px;background:var(--t-accent);color:#fff;font-weight:700;padding:0 16px;cursor:pointer}
+.comp button:disabled{opacity:.45}
+:focus-visible{outline:3px solid #6e94cc;outline-offset:2px}
+.placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--t-ink2)}
+</style>
+</head>
+<body>
+<div class="bar"><h1>Ava in the trainer app (mock, made-up data)</h1>
+<button data-state="normal" aria-pressed="true">Normal</button><button data-state="empty">First open</button><button data-state="failed">Not sent</button><button data-state="unlinked">Not linked</button><button data-state="off">Flag off</button>
+<button id="theme">Light / dark</button></div>
+<p class="note">Trainer: Demo Alex. Type a message in the Ava thread and press Send: it shows "Sending...", then "Ava has it", typing, then a scripted reply (the real reply comes from Ava). Say "yes" to her check to see the confirm. Phone 390 px and iPad 820 px, both live.</p>
+<div class="stage">
+ <div class="dev phone" id="phone"></div>
+ <div class="dev ipad" id="ipad"><div class="split"><section id="ipadList"></section><div id="ipadThread" class="screen"></div></div></div>
+</div>
+<script>
+const clients=[{n:"Riley D.",i:"RD",t:"Thanks! See you Thursday",at:"9:41am",u:1},{n:"Sam K.",i:"SK",t:"Can we do 6am instead?",at:"Yesterday",u:0},{n:"Priya M.",i:"PM",t:"You: Great session today",at:"Sat",u:0}];
+let state="normal", screen="list", typing=false;
+let msgs=[];
+const seed=()=>{msgs=state==="empty"||state==="unlinked"?[]:[{who:"me",text:"can you move riley to thursday 7am?",at:"9:02am",st:"answered"},{who:"ava",text:"riley's tuesday 6pm moves to *thu 19 nov 7am* with you.\nreply yes and i'll do it.",at:"9:02am"}];
+ if(state==="failed")msgs.push({who:"me",text:"and sam to 6am friday",at:null,st:"failed"});};
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const fmt=s=>esc(s).replace(/\*([^*\n]+)\*/g,"<strong>$1</strong>");
+const statusLine=m=>m.st==="sending"?"Sending...":m.st==="seen"?"Ava has it":"";
+function avaRow(){ if(state==="off")return "";
+ const last=msgs.at(-1); const line=typing?"Ava is typing...":last?(last.who==="me"?"You: ":"")+last.text.replace(/\*/g,"").replace(/\s+/g," "):"Same Ava as WhatsApp. Ask her anything.";
+ return `<div class="group"><button class="row" data-open="ava" data-sel="${screen==="ava"?1:0}" data-unread="0"><span class="av ava">A</span><span class="mid"><span class="nm"><b>Ava</b>${last?`<time>${last.at||"now"}</time>`:""}</span><span class="last" style="${typing?"color:var(--t-accent)":""}">${esc(line)}</span></span><span class="chev">›</span></button></div>`;}
+function list(){return `<div class="screen"><div class="hdr"><h2>Messages</h2><div class="sub">${clients.length} conversations</div></div><div class="search">Search messages</div><div class="seg"><span class="on">My Clients</span><span>No Trainer</span></div>
+<div class="list">${avaRow()}<div class="group">${clients.map(c=>`<button class="row" data-unread="${c.u}"><span class="av">${c.i}</span><span class="mid"><span class="nm"><b>${c.n}</b><time>${c.at}</time></span><span class="last">${c.t}</span></span><span class="chev">›</span></button>`).join("")}</div></div></div>`;}
+function thread(back=true){
+ if(state==="off")return `<div class="placeholder">Ava isn't available here yet. Message her on WhatsApp.</div>`;
+ const banner=state==="unlinked"?`<div class="meta" style="text-align:center;margin:0 8px 6px">Ava isn't linked to your account yet. Message her on WhatsApp and let Jamie know.</div>`:"";
+ const body=msgs.length?msgs.map((m,k)=>`<div><div class="msg ${m.who==="me"?"me":""}">${m.who==="me"?"":`<span class="av ava">A</span>`}<div class="bub">${fmt(m.text)}</div></div>${m.st==="failed"?`<button class="fail" data-retry="${k}">Not sent. Tap to try again.</button>`:(m.at||statusLine(m))?`<div class="meta ${m.who==="me"?"r":""}">${[m.at||"",m.who==="me"?statusLine(m):""].filter(Boolean).join(", ")}</div>`:""}</div>`).join(""):`<div class="empty">This is the same Ava you message on WhatsApp. Ask about your clients, your calendar or a booking, and say yes here to anything she checks with you.</div>`;
+ return `<div class="nav">${back?`<button data-back aria-label="Back">‹</button>`:"<span></span>"}<div class="ttl"><b>Ava</b><span>Same chat as WhatsApp</span></div><span class="av ava" style="width:34px;height:34px;font-size:14px">A</span></div>
+ <div class="thread">${banner}${body}${typing?`<div class="msg typing"><span class="av ava">A</span><div class="bub"><i></i><i></i><i></i></div></div>`:""}</div>
+ <form class="comp"><textarea aria-label="Message Ava" placeholder="Message Ava..."></textarea><button type="submit">Send</button></form>`;}
+function render(){
+ const ph=document.getElementById("phone"); ph.innerHTML=screen==="list"?list():`<div class="screen">${thread(true)}</div>`;
+ document.getElementById("ipadList").innerHTML=list();
+ document.getElementById("ipadThread").innerHTML=screen==="ava"||state!=="off"?thread(false):`<div class="placeholder">Pick a conversation</div>`;
+ document.querySelectorAll(".thread").forEach(t=>t.scrollTop=t.scrollHeight);}
+function reply(text){
+ const yes=/^\s*(yes|yep|yeah|go ahead|do it)\b/i.test(text);
+ return yes?"done, riley is on *thu 19 nov 7am* with you. i've let her know.":"got it. sam's fri 6:30am can go to *fri 20 nov 6am* with you.\nreply yes and i'll move it.";}
+function send(text){ if(!text.trim())return; const m={who:"me",text:text.trim(),at:null,st:"sending"}; msgs.push(m); render();
+ if(state==="failed"&&!m.retried){setTimeout(()=>{m.st="failed";render();},700);return;}
+ setTimeout(()=>{m.st="seen";m.at="now";typing=true;render();},600);
+ setTimeout(()=>{typing=false;m.st="answered";msgs.push({who:"ava",text:reply(m.text),at:"now"});render();},2200);}
+document.addEventListener("click",e=>{const o=e.target.closest("[data-open]");if(o){screen="ava";render();return;}
+ if(e.target.closest("[data-back]")){screen="list";render();return;}
+ const r=e.target.closest("[data-retry]");if(r){const m=msgs[+r.dataset.retry];msgs.splice(+r.dataset.retry,1);state="normal";document.querySelectorAll(".bar [data-state]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.state==="normal"));send(m.text);return;}
+ const s=e.target.closest(".bar [data-state]");if(s){state=s.dataset.state;document.querySelectorAll(".bar [data-state]").forEach(x=>x.setAttribute("aria-pressed",x===s));typing=false;seed();if(state==="off")screen="list";render();}});
+document.addEventListener("submit",e=>{e.preventDefault();const ta=e.target.querySelector("textarea");send(ta.value);});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&e.target.matches(".comp textarea")){e.preventDefault();send(e.target.value);}});
+document.getElementById("theme").onclick=()=>{const d=document.documentElement;const dark=d.dataset.theme?d.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;d.dataset.theme=dark?"light":"dark";};
+seed();render();
+</script>
+</body>
+</html>

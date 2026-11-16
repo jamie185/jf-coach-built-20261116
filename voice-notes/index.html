@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Note Text</title>
+<style>
+/* Mock of change 789 as built. Self-contained: no fonts, images or scripts from anywhere else. Made-up people only. */
+:root{
+  --page:#f5f8fc; --ink:#141519; --ink2:#7d8292; --card:#fff; --hair:#e3ecf5; --navy:#141742; --chip:#eef2f8;
+  --me:#255fbf; --me-ink:#fff; --them:#e9e9eb; --them-ink:#000;
+  --t-sheet:#fff; --t-ink:#000; --t-ink2:rgba(60,60,67,.76); --t-fill:rgba(118,118,128,.12); --t-scrim:rgba(0,0,0,.2); --t-primary:#000; --t-on-primary:#fff;
+  --n-canvas:#f4f5f7; --n-ink:#222326; --n-ink2:rgba(31,32,37,.60); --n-ink3:rgba(31,32,37,.38); --n-bubble:#fff;
+  --stage:#dfe5ee;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0f1115; --ink:#f2f3f6; --ink2:#9aa0ad; --card:#1a1d23; --hair:#2a2f38; --navy:#3b5bdb; --chip:#262a32;
+    --me:#2f6fd6; --me-ink:#fff; --them:#3a3a3c; --them-ink:#fff;
+    --t-sheet:#1c1c1e; --t-ink:#fff; --t-ink2:rgba(235,235,245,.66); --t-fill:rgba(118,118,128,.24); --t-scrim:rgba(0,0,0,.5); --t-primary:#fff; --t-on-primary:#000;
+    --n-canvas:#16181c; --n-ink:#eceef2; --n-ink2:rgba(236,238,242,.66); --n-ink3:rgba(236,238,242,.42); --n-bubble:#23262c;
+    --stage:#0a0b0d;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0f1115; --ink:#f2f3f6; --ink2:#9aa0ad; --card:#1a1d23; --hair:#2a2f38; --navy:#3b5bdb; --chip:#262a32;
+  --me:#2f6fd6; --me-ink:#fff; --them:#3a3a3c; --them-ink:#fff;
+  --t-sheet:#1c1c1e; --t-ink:#fff; --t-ink2:rgba(235,235,245,.66); --t-fill:rgba(118,118,128,.24); --t-scrim:rgba(0,0,0,.5); --t-primary:#fff; --t-on-primary:#000;
+  --n-canvas:#16181c; --n-ink:#eceef2; --n-ink2:rgba(236,238,242,.66); --n-ink3:rgba(236,238,242,.42); --n-bubble:#23262c;
+  --stage:#0a0b0d;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--stage);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:16px}
+.bar{max-width:880px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar h1{font-size:15px;margin:0 8px 0 0;font-weight:800;letter-spacing:.02em;flex:1 1 100%}
+.bar p{margin:0;flex:1 1 100%;font-size:12.5px;color:var(--ink2)}
+.seg{display:inline-flex;background:var(--chip);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--ink);font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.seg button:focus-visible,.dev button:focus-visible{outline:3px solid #6e94cc;outline-offset:2px}
+.device{margin:0 auto;width:390px;max-width:100%;height:760px;border-radius:34px;overflow:hidden;background:var(--page);box-shadow:0 30px 60px -30px rgba(0,0,0,.45);position:relative;transition:width .2s}
+.device.ipad{width:820px;height:700px;border-radius:24px}
+.screen{display:none;height:100%;flex-direction:column}
+.screen.on{display:flex}
+.nav{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--hair);background:var(--page)}
+.back{width:32px;height:32px;border-radius:999px;background:var(--chip);display:grid;place-items:center;font-weight:800}
+.nav b{font-size:17px;letter-spacing:.02em}
+.thread{flex:1;overflow:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:10px;max-width:560px;width:100%;margin:0 auto}
+.stamp{align-self:center;font-size:11.5px;color:var(--ink2);font-weight:600;margin:6px 0 2px}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row.me{justify-content:flex-end}
+.av{width:30px;height:30px;border-radius:999px;background:#c9d6ea;color:#24314f;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.bub{max-width:78%;padding:9px 12px;border-radius:18px;background:var(--them);color:var(--them-ink);font-size:15px;line-height:1.35}
+.me .bub{background:var(--me);color:var(--me-ink)}
+.player{display:flex;align-items:center;gap:8px;width:250px;max-width:100%;height:36px;border-radius:999px;background:color-mix(in srgb,currentColor 10%,transparent);padding:0 10px;font-size:12px;font-weight:600}
+.player i{width:0;height:0;border-left:9px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent;flex:none}
+.player span{flex:1;height:3px;border-radius:2px;background:color-mix(in srgb,currentColor 30%,transparent)}
+/* exactly the component's CSS (VoiceText.tsx VOICE_TEXT_CSS) */
+.jf-voice-text{display:block;width:100%;max-width:280px;margin:8px 0 0;padding:8px 0 0;border:0;border-top:1px solid color-mix(in srgb,currentColor 16%,transparent);background:none;color:inherit;font:inherit;font-size:13px;line-height:1.45;font-weight:500;text-align:left;opacity:.84;-webkit-tap-highlight-color:transparent}
+.jf-voice-text--done{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;cursor:pointer;overflow-wrap:anywhere}
+.jf-voice-text--done.is-open{display:block;-webkit-line-clamp:unset}
+.jf-voice-text--pending{font-weight:600;opacity:.62;animation:jfVoicePulse 1.6s ease-in-out infinite}
+.jf-voice-text--ask{font-weight:700;text-decoration:underline;text-underline-offset:2px;opacity:.72;cursor:pointer}
+.jf-voice-text:focus-visible{outline:3px solid #6e94cc;outline-offset:2px;border-radius:6px}
+.jf-voice-text:active{transform:scale(.98)}
+@keyframes jfVoicePulse{0%,100%{opacity:.62}50%{opacity:.36}}
+@media (prefers-reduced-motion:reduce){.jf-voice-text--pending{animation:none}.jf-voice-text:active{transform:none}}
+.legend{font-size:11px;color:var(--ink2);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:4px 0 -4px 38px}
+.me + .legend,.legend.r{text-align:right;margin:4px 0 -4px 0}
+.composer{border-top:1px solid var(--hair);padding:10px 16px 20px;display:flex;gap:8px;align-items:center}
+.composer div{flex:1;height:40px;border-radius:999px;background:var(--chip);color:var(--ink2);font-size:14px;display:flex;align-items:center;padding:0 14px}
+/* trainer sheet */
+.tbg{flex:1;background:var(--t-scrim);display:flex;align-items:flex-end}
+.sheet{width:100%;max-height:96%;overflow:auto;background:var(--t-sheet);color:var(--t-ink);border-radius:24px 24px 0 0;padding:8px 18px 28px}
+.ipad .sheet{max-width:620px;margin:0 auto}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--t-fill);margin:0 auto 12px}
+.sheet h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em}
+.sheet .who{margin-top:4px;font-size:17px;font-weight:600}
+.sheet .lead{margin-top:2px;color:var(--t-ink2);font-size:13px}
+.lbl{display:block;margin-top:20px;padding:0 4px;color:var(--t-ink2);font-size:13px;font-weight:600}
+.cm{margin-top:8px;border-radius:14px;background:var(--t-fill);padding:12px 14px;font-size:15px}
+.cm small{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.cm small em{font-style:normal;font-weight:400;color:var(--t-ink2)}
+textarea{width:100%;margin-top:8px;min-height:88px;padding:12px 14px;border-radius:14px;border:0;background:var(--t-fill);color:var(--t-ink);font:inherit;font-size:16px;line-height:1.45;resize:vertical}
+.pill{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;min-height:50px;margin-top:12px;border:0;border-radius:999px;font:inherit;font-size:17px;font-weight:600;letter-spacing:-.026em;background:var(--t-primary);color:var(--t-on-primary);cursor:pointer}
+.pill.quiet{background:var(--t-fill);color:var(--t-ink);min-height:46px;margin-top:10px}
+.pill[disabled]{opacity:.45;cursor:default}
+.pill:active{transform:scale(.97)}
+.hint{margin-top:6px;padding:0 4px;color:var(--t-ink2);font-size:12.5px;line-height:1.4}
+/* JF Notes */
+.notes{flex:1;overflow:auto;background:var(--n-canvas);color:var(--n-ink);padding:16px}
+.task{max-width:640px;margin:0 auto}
+.task h3{margin:0 0 4px;font-size:20px;font-weight:700}
+.task .meta{font-size:13px;color:var(--n-ink2);margin-bottom:14px}
+.ncm{display:flex;gap:10px;margin:14px 0}
+.ncm .av{background:#e3d8f5;color:#3a2a5a}
+.ncm .head{font-size:13px;font-weight:700}
+.ncm .head em{font-style:normal;font-weight:500;color:var(--n-ink3);margin-left:6px}
+.nb{display:inline-block;max-width:100%;margin-top:4px;background:var(--n-bubble);border-radius:18px 18px 18px 6px;padding:10px 14px;font-size:14.5px;box-shadow:0 1px 0 rgba(0,0,0,.03),0 8px 20px -18px rgba(30,40,70,.5)}
+.nplayer{display:flex;align-items:center;gap:8px;width:300px;max-width:100%;height:38px;border-radius:999px;background:var(--n-canvas);padding:0 12px;font-size:12px;color:var(--n-ink2);font-weight:600}
+.nplayer i{width:0;height:0;border-left:9px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.nplayer span{flex:1;height:3px;border-radius:2px;background:var(--n-ink3)}
+.ntext{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-top:6px;width:100%;max-width:320px;border:0;background:none;padding:0;color:var(--n-ink2);font:inherit;font-size:13.5px;line-height:1.45;text-align:left;cursor:pointer}
+.ntext.open{display:block}
+.npend{margin-top:6px;font-size:13px;font-weight:600;color:var(--n-ink3);animation:jfVoicePulse 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.npend{animation:none}}
+.ncomposer{margin-top:18px;background:#fff;border-radius:22px;padding:10px 12px;box-shadow:0 10px 26px -20px rgba(30,40,70,.45)}
+[data-theme="dark"] .ncomposer{background:var(--n-bubble)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ncomposer{background:var(--n-bubble)}}
+.ncomposer .ph{font-size:14px;color:var(--n-ink3);padding:4px 4px 10px}
+.icons{display:flex;gap:4px;align-items:center;color:var(--n-ink3)}
+.ib{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;border:0;background:none;color:inherit;cursor:pointer;font:inherit}
+.ib.rec{width:auto;padding:0 8px;color:#b3261e;font-size:12px;font-weight:700;gap:4px;display:flex}
+.ib.rec b{width:10px;height:10px;border-radius:3px;background:#b3261e;display:block}
+.send{margin-left:auto;width:34px;height:34px;border-radius:999px;background:var(--n-ink3);color:#fff;display:grid;place-items:center;font-weight:800}
+.note{max-width:880px;margin:14px auto 0;font-size:12.5px;color:var(--ink2)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Voice notes turned into text (change 789), as built</h1>
+  <p>Made-up people. Tap the text to open it, "Show text" on an older note, "Speak your note" in session notes, the mic in JF Notes.</p>
+  <div class="seg" role="group" aria-label="Screen">
+    <button data-screen="client" aria-pressed="true">Client chat</button>
+    <button data-screen="trainer" aria-pressed="false">Trainer chat</button>
+    <button data-screen="session" aria-pressed="false">Session notes</button>
+    <button data-screen="jfnotes" aria-pressed="false">JF Notes</button>
+  </div>
+  <div class="seg" role="group" aria-label="Width">
+    <button data-width="phone" aria-pressed="true">Phone</button>
+    <button data-width="ipad" aria-pressed="false">iPad</button>
+  </div>
+  <div class="seg" role="group" aria-label="Theme">
+    <button data-theme-btn="auto" aria-pressed="true">Auto</button>
+    <button data-theme-btn="light" aria-pressed="false">Light</button>
+    <button data-theme-btn="dark" aria-pressed="false">Dark</button>
+  </div>
+</div>
+
+<div class="device" id="device">
+  <!-- CLIENT CHAT: /m/chat -->
+  <section class="screen on" data-s="client" aria-label="Client chat">
+    <div class="nav"><span class="back" aria-hidden="true">‹</span><b>SAM T</b></div>
+    <div class="thread">
+      <div class="stamp">Mon 2 Nov 7:41 am</div>
+      <div class="legend">Older note (sent before it was switched on)</div>
+      <div class="row"><span class="av">ST</span><div class="bub"><div class="player"><i></i><span></span>0:09</div>
+        <button type="button" class="jf-voice-text jf-voice-text--ask" data-ask="Morning Mia, swap Thursday's run for the bike, your knee needs a rest day.">Show text</button></div></div>
+      <div class="stamp">Today 6:02 pm</div>
+      <div class="legend r">Done (two lines, tap to open)</div>
+      <div class="row me"><div class="bub"><div class="player"><i></i><span></span>0:21</div>
+        <button type="button" class="jf-voice-text jf-voice-text--done" aria-expanded="false">Hey Sam, I'm running about ten minutes late tonight, traffic on the Monash is a mess. Can we still do the full session or should we cut the conditioning at the end? Either way is fine with me.</button></div></div>
+      <div class="legend">Being transcribed</div>
+      <div class="row"><span class="av">ST</span><div class="bub"><div class="player"><i></i><span></span>0:07</div>
+        <div class="jf-voice-text jf-voice-text--pending" role="status" aria-live="polite" data-finish="All good, we'll keep it to 45 minutes. See you at 6.15.">Transcribing...</div></div></div>
+      <div class="legend r">Failed or nothing said: nothing at all</div>
+      <div class="row me"><div class="bub"><div class="player"><i></i><span></span>0:02</div></div></div>
+    </div>
+    <div class="composer"><div>Message</div></div>
+  </section>
+
+  <!-- TRAINER CHAT: /t/messages/thread -->
+  <section class="screen" data-s="trainer" aria-label="Trainer chat">
+    <div class="nav"><span class="back" aria-hidden="true">‹</span><b>Mia K</b></div>
+    <div class="thread">
+      <div class="stamp">Today 6:02 pm</div>
+      <div class="row"><span class="av">MK</span><div class="bub"><div class="player"><i></i><span></span>0:21</div>
+        <button type="button" class="jf-voice-text jf-voice-text--done" aria-expanded="false">Hey Sam, I'm running about ten minutes late tonight, traffic on the Monash is a mess. Can we still do the full session or should we cut the conditioning at the end? Either way is fine with me.</button></div></div>
+      <div class="row me"><div class="bub">All good, we'll keep it to 45 minutes.</div></div>
+      <div class="row"><span class="av">MK</span><div class="bub"><div class="player"><i></i><span></span>0:05</div>
+        <div class="jf-voice-text jf-voice-text--pending" role="status" aria-live="polite" data-finish="Legend, thank you!">Transcribing...</div></div></div>
+    </div>
+    <div class="composer"><div>Message</div></div>
+  </section>
+
+  <!-- SESSION NOTES: FreeSessionNotesSheet -->
+  <section class="screen" data-s="session" aria-label="Free session notes">
+    <div class="tbg"><div class="sheet" role="dialog" aria-label="JFNotes for Priya D">
+      <div class="grab" aria-hidden="true"></div>
+      <h2>Free session notes</h2>
+      <div class="who">Priya D</div>
+      <div class="lead">View the lead history or add a quick comment.</div>
+      <span class="lbl">Comments</span>
+      <div class="cm"><small>Sam T <em>16 Nov, 5:40 pm</em></small><div style="margin-top:4px">Booked in for Tue 6pm, wants to build strength before her wedding in March.</div></div>
+      <label class="lbl" for="note">Add comment</label>
+      <textarea id="note" placeholder="What should the team know?"></textarea>
+      <div style="margin-top:10px">
+        <button type="button" class="pill quiet" id="speak" aria-pressed="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          <span>Speak your note</span>
+        </button>
+        <div class="hint" id="speakHint" role="status" hidden></div>
+      </div>
+      <button type="button" class="pill" id="addc" disabled>Add comment</button>
+      <button type="button" class="pill quiet">Open post-free-session form</button>
+    </div></div>
+  </section>
+
+  <!-- JF NOTES: TaskModal -->
+  <section class="screen" data-s="jfnotes" aria-label="JF Notes task">
+    <div class="notes"><div class="task">
+      <h3>Priya D</h3>
+      <div class="meta">Free session · Sam T · Tue 17 Nov</div>
+      <div class="ncm"><span class="av">ST</span><div style="min-width:0;flex:1">
+        <div class="head">Sam T<em>5:58 pm</em></div>
+        <div class="nb" style="width:100%;max-width:360px">
+          <div class="nplayer"><i></i><span></span>0:34</div>
+          <button type="button" class="ntext" aria-expanded="false">She trained at F45 for a year, stopped after a shoulder strain in July. Cleared by her physio. Wants two sessions a week, Tuesday and Friday mornings, and is keen on the Kickstart. Bring the shoulder program on Tuesday.</button>
+        </div></div></div>
+      <div class="ncm"><span class="av">LR</span><div style="min-width:0;flex:1">
+        <div class="head">Lena R<em>just now</em></div>
+        <div class="nb" style="width:100%;max-width:360px">
+          <div class="nplayer"><i></i><span></span>0:06</div>
+          <div class="npend" role="status" aria-live="polite" data-finish="Thanks Sam, I'll send her the Kickstart link tonight.">Transcribing...</div>
+        </div></div></div>
+      <div class="ncomposer">
+        <div class="ph">Comment, then tag someone to send</div>
+        <div class="icons">
+          <button type="button" class="ib" aria-label="Attach image">▢</button>
+          <button type="button" class="ib" aria-label="Attach video">▷</button>
+          <button type="button" class="ib" id="nrec" aria-label="Record a voice note" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+          <span class="send" aria-hidden="true">↑</span>
+        </div>
+      </div>
+    </div></div>
+  </section>
+</div>
+<p class="note">Switch off: none of this appears (no text line, no "Speak your note", no mic in JF Notes), and the app makes no extra request. In demo, only the demo client's chat and admin accounts see it.</p>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s), $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const press = (group, btn) => $$('button', group).forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  $$('[data-screen]').forEach(b => b.onclick = () => { press(b.parentNode, b); $$('.screen').forEach(s => s.classList.toggle('on', s.dataset.s === b.dataset.screen)); });
+  $$('[data-width]').forEach(b => b.onclick = () => { press(b.parentNode, b); $('#device').classList.toggle('ipad', b.dataset.width === 'ipad'); });
+  $$('[data-theme-btn]').forEach(b => b.onclick = () => { press(b.parentNode, b); const t = b.dataset.themeBtn; if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); });
+
+  const wireDone = (el) => el.onclick = () => { const open = el.classList.toggle('is-open'); el.setAttribute('aria-expanded', String(open)); };
+  $$('.jf-voice-text--done').forEach(wireDone);
+  const finish = (el, text) => setTimeout(() => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'jf-voice-text jf-voice-text--done'; b.setAttribute('aria-expanded', 'false'); b.textContent = text;
+    wireDone(b); el.replaceWith(b);
+  }, 3200);
+  $$('.jf-voice-text--pending[data-finish]').forEach(el => finish(el, el.dataset.finish));
+  $$('[data-ask]').forEach(el => el.onclick = () => {
+    const p = document.createElement('div'); p.className = 'jf-voice-text jf-voice-text--pending'; p.setAttribute('role', 'status'); p.textContent = 'Transcribing...';
+    el.replaceWith(p); finish(p, el.dataset.ask);
+  });
+  $$('.ntext').forEach(el => el.onclick = () => { const o = el.classList.toggle('open'); el.setAttribute('aria-expanded', String(o)); });
+  $$('.npend[data-finish]').forEach(el => setTimeout(() => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'ntext'; b.setAttribute('aria-expanded', 'false'); b.textContent = el.dataset.finish;
+    b.onclick = () => { const o = b.classList.toggle('open'); b.setAttribute('aria-expanded', String(o)); }; el.replaceWith(b);
+  }, 3600));
+
+  /* session notes: idle -> recording (Stop · 0:0x) -> Transcribing... -> words in the box */
+  const speak = $('#speak'), label = $('span', speak), hint = $('#speakHint'), note = $('#note'), add = $('#addc');
+  let state = 'idle', secs = 0, timer = null;
+  note.oninput = () => { add.disabled = !note.value.trim(); };
+  speak.onclick = () => {
+    if (state === 'idle') {
+      state = 'recording'; secs = 0; speak.setAttribute('aria-pressed', 'true');
+      label.textContent = 'Stop · 0:00'; hint.hidden = false; hint.textContent = "Listening. Tap Stop when you're done. The words go in the box for you to check.";
+      timer = setInterval(() => { secs++; label.textContent = 'Stop · 0:' + String(secs).padStart(2, '0'); }, 1000);
+    } else if (state === 'recording') {
+      clearInterval(timer); state = 'working'; speak.setAttribute('aria-pressed', 'false'); speak.disabled = true; label.textContent = 'Transcribing...'; hint.hidden = true;
+      setTimeout(() => {
+        const words = 'Great first session. Squats need work on depth, keen on the Kickstart, follow up Thursday.';
+        note.value = note.value.trim() ? note.value.trimEnd() + ' ' + words : words;
+        add.disabled = false; speak.disabled = false; state = 'idle'; label.textContent = 'Speak your note';
+      }, 2200);
+    }
+  };
+
+  /* JF Notes mic: tap to record, tap again to stop; it uploads and drops ![voice](url) into the comment */
+  const nrec = $('#nrec'); let nt = null, ns = 0;
+  const micSvg = nrec.innerHTML;
+  nrec.onclick = () => {
+    if (!nt) { ns = 0; nrec.classList.add('rec'); nrec.setAttribute('aria-pressed', 'true'); nrec.innerHTML = '<b aria-hidden="true"></b>0:00';
+      nt = setInterval(() => { ns++; nrec.innerHTML = '<b aria-hidden="true"></b>0:' + String(ns).padStart(2, '0'); }, 1000); }
+    else { clearInterval(nt); nt = null; nrec.classList.remove('rec'); nrec.setAttribute('aria-pressed', 'false'); nrec.innerHTML = micSvg;
+      $('.ph').textContent = '![voice](/uploads/1792... .m4a)'; }
+  };
+})();
+</script>
+</body>
+</html>
