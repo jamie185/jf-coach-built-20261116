@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JF Go two routes</title>
+<style>
+/* Mock of feat/jfgo-793 (changes 793 and 794), built from go.css as it stands on the branch: the walk box
+   (.jfgo-panel.walking > .jfgo-walk), the way chips, the new road notes, the weak-signal line and the map markers.
+   Made-up places and data only. No external requests. */
+:root { --page: #e9edf3; --ctl: #ffffff; --ctl-ink: #1f2025; --ctl-mut: #6c7080; --ctl-line: #dfe5ee; }
+html[data-jf-dark] { --page: #0f1013; --ctl: #1c1c1f; --ctl-ink: #f2f2f7; --ctl-mut: #9ea3b0; --ctl-line: #2c2c30; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ctl-ink); font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; }
+.wrap { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px; align-items: flex-start; justify-content: center; }
+.controls { flex: 0 1 360px; min-width: 0; background: var(--ctl); border: 1px solid var(--ctl-line); border-radius: 18px; padding: 14px 16px; display: grid; gap: 12px; }
+.controls h1 { margin: 0; font-size: 17px; }
+.controls p { margin: 0; color: var(--ctl-mut); font-size: 12.5px; }
+.controls fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }
+.controls legend { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ctl-mut); margin-bottom: 4px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border: 0; border-radius: 999px; padding: 7px 12px; background: #eef2f8; color: #141742; font: inherit; font-weight: 650; cursor: pointer; }
+html[data-jf-dark] .seg button { background: #34343a; color: #f2f2f7; }
+.seg button[aria-pressed="true"] { background: #141742; color: #fff; }
+html[data-jf-dark] .seg button[aria-pressed="true"] { background: #f2f2f7; color: #141742; }
+.controls label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.controls input[type=range] { width: 100%; }
+.log { font: 11.5px/1.45 ui-monospace, Menlo, monospace; background: #f4f6fa; border-radius: 10px; padding: 8px; min-height: 40px; max-height: 140px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+html[data-jf-dark] .log { background: #2c2c30; }
+
+/* the phone / iPad */
+.device { position: relative; width: 390px; max-width: 100%; height: 780px; border-radius: 36px; overflow: hidden; background: #dfe8d8; box-shadow: 0 30px 60px -30px rgba(20, 30, 60, .55), 0 0 0 8px #141519; }
+.device.ipad { width: 820px; height: 700px; border-radius: 28px; }
+.map { position: absolute; inset: 0; }
+.map svg { width: 100%; height: 100%; display: block; }
+html[data-jf-dark] .device { background: #1d2420; }
+
+/* ===== from go.css (feat/jfgo-793), scoped to .m-root ===== */
+.m-root { --go-ink: #1f2025; --go-muted: #6c7080; --go-fill2: #eef2f8; position: absolute; inset: 0; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+html[data-jf-dark] .m-root { --go-ink: #f2f2f7; --go-muted: #9ea3b0; --go-fill2: #34343a; }
+.m-root .jfgo-panel { position: absolute; left: 10px; right: 10px; bottom: 84px; z-index: 640; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: 26px; background: rgba(255, 255, 255, 0.93); backdrop-filter: blur(24px) saturate(1.7); -webkit-backdrop-filter: blur(24px) saturate(1.7); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9) inset, 0 22px 48px -22px rgba(20, 30, 60, 0.55); }
+.device.ipad .m-root .jfgo-panel { left: auto; right: 16px; width: 420px; }
+html[data-jf-dark] .m-root .jfgo-panel { background: rgba(24, 24, 28, 0.9); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 22px 48px -22px rgba(0, 0, 0, 0.7); }
+.m-root .jfgo-walk { display: grid; gap: 10px; padding: 0; }
+.m-root .jfgo-walk-row { display: flex; align-items: center; gap: 12px; padding: 0 2px; }
+.m-root .jfgo-arrow { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #0a7aff; background: #eaf3ff; position: relative; }
+html[data-jf-dark] .m-root .jfgo-arrow { background: #1b2a40; }
+.m-root .jfgo-arrow svg { transition: transform 0.25s ease-out; }
+.m-root .jfgo-walk-row .dist { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.m-root .jfgo-walk-row .dist b { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: var(--go-ink); font-variant-numeric: tabular-nums; line-height: 1; }
+.m-root .jfgo-walk-row .dist small { font-size: 13.5px; font-weight: 500; color: var(--go-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-root .jfgo-walk-row .dist small.to { font-size: 12.5px; font-weight: 650; }
+.m-root .jfgo-walk-flag { flex: 0 0 auto; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--go-fill2); color: #141742; display: grid; place-items: center; }
+html[data-jf-dark] .m-root .jfgo-walk-flag { color: #f2f2f7; }
+.m-root .jfgo-walk-end { flex: 0 0 auto; min-width: 56px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--go-fill2); color: #141742; font: inherit; font-size: 15px; font-weight: 650; }
+html[data-jf-dark] .m-root .jfgo-walk-end { color: #f2f2f7; }
+.m-root .jfgo-routes { display: flex; gap: 8px; margin: 8px 0 2px; overflow-x: auto; }
+.m-root .jfgo-route-chip { flex: 0 0 auto; display: flex; align-items: baseline; gap: 6px; min-height: 36px; padding: 6px 12px; border-radius: 18px; border: 1px solid rgba(20, 23, 66, 0.14); background: rgba(255, 255, 255, 0.85); color: var(--go-ink); font: inherit; cursor: pointer; }
+.m-root .jfgo-route-chip b { font-size: 15px; }
+.m-root .jfgo-route-chip small { font-size: 12px; opacity: 0.7; }
+.m-root .jfgo-route-chip.on { background: #0a7aff; border-color: #0a7aff; color: #fff; }
+.m-root .jfgo-route-chip.on small { opacity: 0.9; }
+html[data-jf-dark] .m-root .jfgo-route-chip:not(.on) { background: rgba(40, 40, 46, 0.9); color: #f2f2f7; border-color: rgba(255, 255, 255, 0.14); }
+/* NEW 793 */
+.m-root .jfgo-route-chip:has(.jfgo-route-flag) { display: inline-grid; grid-template-columns: auto auto; column-gap: 6px; row-gap: 0; justify-content: start; }
+.m-root .jfgo-route-flag { grid-column: 1 / -1; font-style: normal; font-size: 11px; font-weight: 700; line-height: 1.2; color: #8a5300; }
+.m-root .jfgo-route-chip.on .jfgo-route-flag { color: #ffe2a8; }
+.m-root .jfgo-route-notes { margin: 2px 2px 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 13px; font-weight: 650; line-height: 1.35; color: #8a5300; }
+html[data-jf-dark] .m-root .jfgo-route-notes, html[data-jf-dark] .m-root .jfgo-route-chip:not(.on) .jfgo-route-flag { color: #ffc65c; }
+.m-root .jfgo-rt-cross { position: absolute; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; background: #f2994a; color: #fff; font: 800 13px/1 -apple-system, system-ui, sans-serif; border: 2px solid #fff; box-shadow: 0 2px 8px -2px rgba(20, 30, 60, 0.5); }
+.m-root .jfgo-rt-cross.unmarked { background: #d92d20; }
+/* existing line style, reused by NEW 794 idea 7 */
+.m-root .jfgo-offpath { margin: -2px 2px 0; font-size: 13.5px; font-weight: 650; line-height: 1.35; color: #8a5300; }
+html[data-jf-dark] .m-root .jfgo-offpath { color: #ffc65c; }
+.m-root .jfgo-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; padding: 0 18px; border: 0; border-radius: 999px; background: #141742; color: #fff; font: inherit; font-size: 16px; font-weight: 700; }
+html[data-jf-dark] .m-root .jfgo-primary { background: #f2f2f7; color: #141742; }
+.m-root .jfgo-rt-tag { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; padding: 3px 8px; border-radius: 10px; border: 0; background: #fff; color: #4a5568; font: 600 12px/1.2 -apple-system, system-ui, sans-serif; box-shadow: 0 2px 8px -2px rgba(20, 30, 60, 0.45); cursor: pointer; }
+.m-root .jfgo-seeroute { position: absolute; right: 64px; top: 14px; z-index: 650; height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #0a7aff; color: #fff; font: 600 14px/1 -apple-system, system-ui, sans-serif; }
+.m-root .dock { position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: rgba(255,255,255,.92); border-top: 1px solid rgba(0,0,0,.06); }
+html[data-jf-dark] .m-root .dock { background: rgba(24,24,28,.95); border-color: rgba(255,255,255,.08); }
+.marker { position: absolute; transform: translate(-50%, -50%); }
+.me { width: 22px; height: 22px; border-radius: 50%; background: #0a7aff; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(20,30,60,.4); }
+.cone { position: absolute; left: 50%; top: 50%; width: 80px; height: 70px; transform-origin: 50% 100%; background: radial-gradient(70px 70px at 50% 100%, rgba(10,122,255,.42), rgba(10,122,255,0) 72%); clip-path: polygon(50% 100%, 10% 0, 90% 0); }
+.chest { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(160deg, #fff6d8, #ffe08a); box-shadow: 0 0 0 2.5px #f2b632, 0 6px 14px -6px rgba(160,110,0,.6); display: grid; place-items: center; font-size: 20px; }
+.ring { width: 64px; height: 64px; border-radius: 50%; background: rgba(255, 209, 102, .16); border: 1.5px solid #ffb020; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="device" id="device">
+    <div class="map"><svg id="map" viewBox="0 0 390 780" preserveAspectRatio="xMidYMid slice" aria-label="Map"></svg></div>
+    <div class="m-root" id="root">
+      <div id="markers"></div>
+      <button type="button" class="jfgo-seeroute">See route</button>
+      <div class="jfgo-panel walking"><div class="jfgo-walk" id="walk"></div></div>
+      <div class="dock"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <h1>JF Go, changes 793 and 794</h1>
+    <p>As built on <b>feat/jfgo-793</b>. Made-up park and roads. Each switch is a go_config flag (off by default). This page shows "on". Off is today's app exactly.</p>
+    <fieldset><legend>793 jfGoTwoRoutes</legend><div class="seg" data-k="two"><button data-v="off">Off (today)</button><button data-v="on">On</button></div>
+      <p>Off: the quicker way (it crosses Long Road where the map shows no crossing) is the default, and there are no notes. On: the quieter way is the default, each way says what the map shows, and the map marks the crossings.</p></fieldset>
+    <fieldset><legend>Pick a way</legend><p>Tap a chip in the walk box, or a grey line or its time bubble on the map.</p></fieldset>
+    <fieldset><legend>794 idea 7 jfGoWeakSignal</legend><div class="seg" data-k="weak"><button data-v="off">Off</button><button data-v="on">On</button></div>
+      <label>GPS accuracy <input type="range" id="acc" min="4" max="80" value="8"> <span id="accv">8 m</span></label>
+      <p>On: worse than 30 m hides the arrow and shows the line; it clears at 20 m.</p></fieldset>
+    <fieldset><legend>794 idea 6 jfGoWalkHeading</legend><div class="seg" data-k="head"><button data-v="off">Off</button><button data-v="on">On</button></div>
+      <div class="seg" data-k="moving"><button data-v="no">Standing</button><button data-v="yes">Walking 1.3 m/s</button></div>
+      <p id="headv"></p></fieldset>
+    <fieldset><legend>794 idea 8 jfGoNavLog</legend><div class="seg" data-k="log"><button data-v="off">Off</button><button data-v="on">On</button></div>
+      <label>Metres to the chest <input type="range" id="left" min="0" max="700" value="640"> <span id="leftv"></span></label>
+      <div class="log" id="log" aria-live="polite"></div></fieldset>
+    <fieldset><legend>Screen</legend>
+      <div class="seg" data-k="size"><button data-v="phone">Phone 390</button><button data-v="ipad">iPad 820</button></div>
+      <div class="seg" data-k="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div></fieldset>
+  </div>
+</div>
+<script>
+(() => {
+  const S = { two: "on", weak: "on", head: "on", moving: "yes", log: "on", size: "phone", theme: "light", pick: null, acc: 8, left: 640, weakWas: false, logged: [] };
+  /* the map, in screen units: you at the bottom, the chest at the top, Long Road (C123) across the middle */
+  const ME = [195, 400], CHEST = [215, 70];
+  const A = { id: "A", min: 8, line: [ME, [200, 300], [205, 230], [210, 150], CHEST], notes: [{ kind: "cross", layer: "primary", at: [205, 230], text: "Crosses a main road with no marked crossing on the map. Stop and look both ways." }] };
+  const B = { id: "B", min: 10, line: [ME, [270, 370], [300, 300], [300, 230], [285, 140], CHEST], notes: [{ kind: "busy", at: [300, 230], text: "Meets Long Road (C123). Cross only at a crossing or the lights." }] };
+  /* what the server answers: off = quicker first, tags "" / "" (Best, Other way); on = no-unmarked-crossing first, safest / fastest */
+  const answer = () => S.two === "on" ? [{ ...B, tag: "safest" }, { ...A, tag: "fastest" }] : [{ ...A, tag: "", notes: undefined }, { ...B, tag: "", notes: undefined }];
+  const routeNoteShort = (n) => !n || !n.length ? null : n.some((x) => x.kind === "cross") ? "Unmarked crossing" : "Busy road";
+  const $ = (id) => document.getElementById(id);
+  const svgNS = "http://www.w3.org/2000/svg";
+  function el(tag, a, p) { const e = document.createElementNS(svgNS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; }
+  const pts = (l) => l.map((p) => p.join(",")).join(" ");
+  /* a map point (svg units) to its place on the device, whatever the viewBox */
+  function posAt(node, at) { const svg = $("map"), pt = svg.createSVGPoint(); pt.x = at[0]; pt.y = at[1]; const sp = pt.matrixTransform(svg.getScreenCTM()), r = $("device").getBoundingClientRect(); node.style.left = `${sp.x - r.left}px`; node.style.top = `${sp.y - r.top}px`; }
+  function drawMap(opts, cur) {
+    const m = $("map"); m.innerHTML = "";
+    const dark = S.theme === "dark";
+    el("rect", { x: 0, y: 0, width: 390, height: 780, fill: dark ? "#1d2420" : "#e8eee2" }, m);
+    el("path", { d: "M250 100 C320 90 360 170 340 290 C330 370 250 390 230 340 C200 270 210 130 250 100Z", fill: dark ? "#203026" : "#cfe5c2" }, m);
+    for (const y of [40, 340, 520]) el("line", { x1: -10, y1: y, x2: 400, y2: y + 10, stroke: dark ? "#3a3f48" : "#ffffff", "stroke-width": 9 }, m);
+    for (const x of [80, 330]) el("line", { x1: x, y1: -10, x2: x + 20, y2: 790, stroke: dark ? "#3a3f48" : "#ffffff", "stroke-width": 9 }, m);
+    el("line", { x1: -10, y1: 225, x2: 400, y2: 235, stroke: dark ? "#6b5a2e" : "#fcd98a", "stroke-width": 16 }, m);
+    el("text", { x: 20, y: 218, fill: dark ? "#c7b27a" : "#8a6a1e", "font-size": 11, "font-weight": 700, "font-family": "system-ui" }, m).textContent = "Long Road (C123)";
+    el("text", { x: 250, y: 170, fill: dark ? "#8fbf8a" : "#4f7d48", "font-size": 11, "font-weight": 700, "font-family": "system-ui" }, m).textContent = "Wattle Reserve";
+    const mk = $("markers"); mk.innerHTML = "";
+    for (const o of opts) { if (o === cur) continue;
+      el("polyline", { points: pts(o.line), fill: "none", stroke: "#fff", "stroke-width": 8, "stroke-linecap": "round", "stroke-linejoin": "round", opacity: .9 }, m);
+      const g = el("polyline", { points: pts(o.line), fill: "none", stroke: "#8e98a8", "stroke-width": 5, "stroke-linecap": "round", "stroke-linejoin": "round", style: "cursor:pointer" }, m);
+      g.addEventListener("click", () => { S.pick = o.id; render(); });
+      const mid = o.line[Math.floor(o.line.length / 2)];
+      const tag = document.createElement("button"); tag.type = "button"; tag.className = "jfgo-rt-tag marker"; tag.textContent = `${o.min} min`;
+      posAt(tag, mid); tag.onclick = () => { S.pick = o.id; render(); }; mk.appendChild(tag);
+    }
+    el("polyline", { points: pts(cur.line), fill: "none", stroke: "#fff", "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round" }, m);
+    el("polyline", { points: pts(cur.line), fill: "none", stroke: "#0a7aff", "stroke-width": 5.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, m);
+    const place = (cls, at, html) => { const d = document.createElement("span"); d.className = cls; posAt(d, at); d.innerHTML = html; mk.appendChild(d); return d; };
+    place("marker ring", CHEST, ""); place("marker chest", CHEST, "&#127873;");
+    /* 793: the way you're on, its crossings (only when the server sent notes) */
+    for (const n of cur.notes || []) if (n.kind !== "beside") place(`jfgo-rt-cross${n.kind === "cross" ? " unmarked" : ""}`, n.at, "!");
+    const me = place("marker", ME, ""); me.innerHTML = `<span class="cone" style="transform: translate(-50%,-100%) rotate(${heading().h ?? 0}deg)"></span><span class="me" style="position:relative;display:block"></span>`;
+  }
+  /* idea 6 */
+  const COMPASS = 335, COURSE = 18;
+  function heading() { if (S.head === "on" && S.moving === "yes" && S.acc <= 25) return { h: COURSE, src: "course" }; return { h: COMPASS, src: "compass" }; }
+  /* idea 7 */
+  function weak() { if (S.weak !== "on") return false; const w = S.weakWas ? S.acc > 20 : S.acc > 30; S.weakWas = w; return w; }
+  const fmtM = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.max(5, Math.round(m / 5) * 5)} m`;
+  function render() {
+    document.documentElement.toggleAttribute("data-jf-dark", S.theme === "dark");
+    $("device").classList.toggle("ipad", S.size === "ipad");
+    $("device").querySelector(".map svg").setAttribute("viewBox", S.size === "ipad" ? "-60 0 820 700" : "0 0 390 780");
+    for (const s of document.querySelectorAll(".seg")) for (const b of s.querySelectorAll("button")) b.setAttribute("aria-pressed", String(S[s.dataset.k] === b.dataset.v));
+    const opts = answer(); const cur = opts.find((o) => o.id === S.pick) || opts[0];
+    drawMap(opts, cur);
+    window.onresize = () => render();
+    const w = weak(), hd = heading();
+    const rel = ((12 - hd.h + 540) % 360) - 180; /* bearing to the next bit of the way is about 12 degrees */
+    const flag = routeNoteShort;
+    $("walk").innerHTML = `
+      <div class="jfgo-walk-row">
+        ${w ? "" : `<span class="jfgo-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style="transform: rotate(${rel}deg)"><path d="M12 2.5 19 20l-7-4-7 4Z"/></svg></span>`}
+        <span class="dist"><small class="to">Wattle Reserve</small><b>${fmtM(S.left)}</b><small>Straight on, ${Math.max(1, Math.round(S.left / 80))} min</small></span>
+        <button type="button" class="jfgo-walk-flag" aria-label="Report this spot"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4"/><path d="M5.5 4.5h11l-2.2 4 2.2 4h-11"/></svg></button>
+        <button type="button" class="jfgo-walk-end">End</button>
+      </div>
+      <div class="jfgo-routes" role="radiogroup" aria-label="Ways there">
+        ${opts.map((o, i) => { const on = o === cur, name = o.tag === "safest" ? "Safest" : o.tag === "fastest" ? "Fastest" : i === 0 ? "Best" : "Other way", f = flag(o.notes);
+          return `<button type="button" role="radio" aria-checked="${on}" class="jfgo-route-chip${on ? " on" : ""}" data-id="${o.id}"><b>${o.min} min</b><small>${name}</small>${f ? `<i class="jfgo-route-flag">${f}</i>` : ""}</button>`; }).join("")}
+      </div>
+      ${cur.notes && cur.notes.length ? `<ul class="jfgo-route-notes">${cur.notes.slice(0, 2).map((n) => `<li>${n.text}</li>`).join("")}</ul>` : ""}
+      ${w ? `<p class="jfgo-offpath jfgo-weak" role="status">Weak signal, direction may be off.</p>` : ""}
+      <button type="button" class="jfgo-primary">&#128247; Open the camera</button>`;
+    for (const b of $("walk").querySelectorAll(".jfgo-route-chip")) b.onclick = () => { S.pick = b.dataset.id; render(); };
+    $("accv").textContent = `${S.acc} m`; $("leftv").textContent = `${S.left} m`;
+    $("headv").textContent = `The map uses: ${hd.src === "course" ? `the GPS course (${COURSE} deg)` : `the compass (${COMPASS} deg)`}.${S.head === "on" && S.moving === "yes" && S.acc > 25 ? " The fix is over 25 m, so the compass." : ""}`;
+    /* idea 8 */
+    if (S.log === "on") for (const m of [100, 60, 30]) if (S.left <= m && !S.logged.includes(m)) {
+      const marks = [100, 60, 30].filter((x) => S.left <= x && !S.logged.includes(x)); S.logged.push(...marks);
+      const ev = { step: "nav-check", atM: marks[marks.length - 1], distM: S.left, acc: S.acc, bearing: 12, compass: COMPASS, course: COURSE, speed: S.moving === "yes" ? 1.3 : 0.2, src: hd.src, off: Math.round(((12 - hd.h + 540) % 360) - 180) };
+      if ($("log").textContent.startsWith("(")) $("log").textContent = "";
+      $("log").textContent += `jfAx("jfgo", ${JSON.stringify(ev)})\n`; break;
+    }
+    if (!$("log").textContent) $("log").textContent = S.log === "on" ? "(walk under 100 m to see the events: numbers only, no coordinates)" : "(off: nothing is logged)";
+  }
+  for (const s of document.querySelectorAll(".seg")) for (const b of s.querySelectorAll("button")) b.onclick = () => { S[s.dataset.k] = b.dataset.v; if (s.dataset.k === "two") S.pick = null; if (s.dataset.k === "log") { S.logged = []; $("log").textContent = ""; } render(); };
+  $("acc").oninput = (e) => { S.acc = Number(e.target.value); render(); };
+  $("left").oninput = (e) => { S.left = Number(e.target.value); if (S.left > 100) { S.logged = []; } render(); };
+  /* a state in the address, for screenshots: #theme=dark&size=ipad&acc=45&two=off&left=50 */
+  try { for (const [k, v] of new URLSearchParams(location.hash.slice(1))) if (k in S) S[k] = k === "acc" || k === "left" ? Number(v) : v; } catch { /* fine */ }
+  $("acc").value = S.acc; $("left").value = S.left;
+  render();
+})();
+</script>
+</body>
+</html>

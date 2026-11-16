@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session Checklist Mock</title>
+<style>
+/* ---- the build's own stylesheet, copied verbatim from app-v3/src/components/mobile/trainer/session-checklist.css ---- */
+/* 787 session checklist (trainer only, in the client's view). app-v3/DESIGN.md: white cards on a pale page,
+   eyebrow + Bebas title, 13-14px body, flat grey choices that turn navy, one curve for motion. */
+.jsc-bubble {
+  position: absolute; right: 0; top: 44%; z-index: 290;
+  width: 44px; min-height: 68px; padding: 10px 0 10px 4px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 0; border-radius: 18px 0 0 18px; background: #141742; color: #fff;
+  box-shadow: 0 10px 26px -12px rgba(20, 23, 66, .45); cursor: pointer;
+  transition: transform .2s cubic-bezier(.2, .7, .2, 1), background .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.jsc-bubble:active { transform: scale(.97); }
+.jsc-bubble:focus-visible { outline: 3px solid #6e94cc; outline-offset: 2px; }
+.jsc-bubble.is-quiet { background: #eef2f8; color: #7d8292; box-shadow: 0 6px 18px -14px rgba(20, 23, 66, .35); }
+.jsc-count {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #fff; color: #141742;
+  font: 800 12px/22px var(--font-mulish, system-ui), sans-serif; text-align: center;
+}
+.jsc-bubble.is-live { animation: jsc-pulse 1.8s cubic-bezier(.2, .7, .2, 1) infinite; }
+@keyframes jsc-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(110, 148, 204, .7), 0 10px 26px -12px rgba(20, 23, 66, .45); }
+  70% { box-shadow: 0 0 0 14px rgba(110, 148, 204, 0), 0 10px 26px -12px rgba(20, 23, 66, .45); }
+  100% { box-shadow: 0 0 0 0 rgba(110, 148, 204, 0), 0 10px 26px -12px rgba(20, 23, 66, .45); }
+}
+
+.jsc-layer {
+  position: absolute; inset: 0; z-index: 300; background: rgba(20, 23, 66, .28);
+  animation: jsc-fade .24s cubic-bezier(.2, .7, .2, 1) both;
+}
+.jsc-panel {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, calc(100% - 24px));
+  display: flex; flex-direction: column; background: #f5f8fc; color: #141519;
+  box-shadow: -16px 0 40px -18px rgba(30, 40, 70, .35);
+  border-radius: 24px 0 0 24px; overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  animation: jsc-slide .32s cubic-bezier(.2, .7, .2, 1) both;
+}
+@keyframes jsc-slide { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes jsc-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.jsc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 16px 8px; }
+.jsc-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #9298a6; }
+.jsc-title { margin: 4px 0 0; font-family: var(--font-display, "Bebas Neue"), sans-serif; font-weight: 400; font-size: 24px; line-height: 1.05; letter-spacing: .04em; }
+.jsc-close {
+  position: relative; flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: #eef2f8; color: #141519; display: grid; place-items: center; cursor: pointer;
+}
+.jsc-close::after { content: ""; position: absolute; inset: -4px; }
+.jsc-close:focus-visible, .jsc-tick:focus-visible, .jsc-line-title:focus-visible, .jsc-go:focus-visible { outline: 3px solid #6e94cc; outline-offset: 2px; }
+
+.jsc-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 16px calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 11px; }
+.jsc-card {
+  background: #fff; border: 1px solid #e3ecf5; border-radius: 20px; padding: 17px;
+  box-shadow: 0 10px 26px -16px rgba(20, 23, 66, .14); display: flex; flex-direction: column; gap: 12px;
+}
+.jsc-note { font-size: 12.5px; font-weight: 600; color: #7d8292; line-height: 1.4; }
+
+.jsc-score { flex-direction: row; align-items: center; gap: 16px; }
+.jsc-ring { flex: none; }
+.jsc-ring-num { font-family: var(--font-display, "Bebas Neue"), sans-serif; font-size: 24px; letter-spacing: .03em; }
+.jsc-score-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.jsc-score-label { font-family: var(--font-display, "Bebas Neue"), sans-serif; font-size: 24px; line-height: 1.05; letter-spacing: .04em; }
+
+.jsc-session { gap: 4px; }
+.jsc-session.is-live { border-color: #b9dcf5; box-shadow: 0 0 0 3px rgba(110, 148, 204, .18), 0 10px 26px -16px rgba(20, 23, 66, .14); }
+.jsc-session-line { font-size: 15px; font-weight: 800; color: #141519; }
+
+.jsc-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.jsc-line { border-top: 1px solid #eef2f8; }
+.jsc-line:first-child { border-top: 0; }
+.jsc-line-head { display: flex; align-items: center; gap: 12px; min-height: 60px; }
+.jsc-tick {
+  flex: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6dfeb; background: #eef2f8;
+  color: transparent; display: grid; place-items: center; cursor: pointer; transition: background .2s, border-color .2s, transform .2s cubic-bezier(.2, .7, .2, 1);
+}
+.jsc-tick:active { transform: scale(.94); }
+.jsc-tick[aria-pressed="true"] { background: #141742; border-color: #141742; color: #fff; }
+.jsc-tick:disabled { cursor: default; }
+.jsc-line-title {
+  flex: 1; min-width: 0; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 0; background: none; padding: 6px 0; text-align: left; color: #141519; cursor: pointer;
+  font-size: 15px; font-weight: 700; line-height: 1.3;
+}
+.jsc-chev { flex: none; color: #9298a6; transition: transform .2s cubic-bezier(.2, .7, .2, 1); }
+.jsc-line.is-open .jsc-chev { transform: rotate(180deg); }
+.jsc-line.is-done .jsc-line-title { color: #9298a6; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.jsc-how { padding: 0 0 14px 56px; display: flex; flex-direction: column; gap: 8px; animation: jsc-fade .2s cubic-bezier(.2, .7, .2, 1) both; }
+.jsc-how-text { margin: 0; font-size: 13.5px; line-height: 1.5; color: #3c3f49; }
+.jsc-why { margin: 0; font-size: 12.5px; font-weight: 600; line-height: 1.4; color: #7d8292; }
+.jsc-go {
+  align-self: flex-start; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px;
+  background: #eef2f8; color: #141742; font-size: 14px; font-weight: 800; cursor: pointer;
+}
+.jsc-go:active { transform: scale(.97); }
+
+.jsc-empty { align-items: center; text-align: center; padding: 28px 17px; }
+.jsc-empty-title { font-family: var(--font-display, "Bebas Neue"), sans-serif; font-size: 24px; line-height: 1.05; letter-spacing: .04em; color: #141519; }
+
+/* iPad: a little more room */
+@media (min-width: 700px) {
+  .jsc-bubble { width: 48px; min-height: 76px; }
+  .jsc-head { padding: 22px 20px 10px; }
+  .jsc-body { padding-left: 20px; padding-right: 20px; }
+}
+
+/* dark (the app's own switch, ios26.css) */
+html[data-jf-dark] .jsc-bubble { background: #ffffff; color: #141742; }
+html[data-jf-dark] .jsc-bubble.is-quiet { background: #2c2c2e; color: #98989f; }
+html[data-jf-dark] .jsc-count { background: #141742; color: #fff; }
+html[data-jf-dark] .jsc-layer { background: rgba(0, 0, 0, .5); }
+html[data-jf-dark] .jsc-panel { background: #000; color: #fff; }
+html[data-jf-dark] .jsc-card { background: #1c1c1e; border-color: #2c2c2e; box-shadow: none; }
+html[data-jf-dark] .jsc-title, html[data-jf-dark] .jsc-session-line, html[data-jf-dark] .jsc-line-title, html[data-jf-dark] .jsc-empty-title { color: #fff; }
+html[data-jf-dark] .jsc-how-text { color: #d1d1d6; }
+html[data-jf-dark] .jsc-note, html[data-jf-dark] .jsc-why, html[data-jf-dark] .jsc-eyebrow { color: #98989f; }
+html[data-jf-dark] .jsc-close, html[data-jf-dark] .jsc-go { background: #2c2c2e; color: #fff; }
+html[data-jf-dark] .jsc-line { border-top-color: #2c2c2e; }
+html[data-jf-dark] .jsc-tick { background: #2c2c2e; border-color: #3a3a3c; }
+html[data-jf-dark] .jsc-tick[aria-pressed="true"] { background: #fff; border-color: #fff; color: #141742; }
+html[data-jf-dark] .jsc-line.is-done .jsc-line-title { color: #6c6c70; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jsc-bubble.is-live { animation: none; box-shadow: 0 0 0 4px rgba(110, 148, 204, .55); }
+  .jsc-layer, .jsc-panel, .jsc-how { animation: none; }
+  .jsc-bubble, .jsc-tick, .jsc-chev { transition: none; }
+}
+
+/* ---- mock page only (not part of the build) ---- */
+:root {
+  --font-display: "Bebas Neue", "Oswald", "Arial Narrow", Impact, sans-serif;
+  --font-mulish: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --pg: #eef2f8; --pg-ink: #141519; --pg-muted: #7d8292; --pg-card: #ffffff; --pg-line: #e3ecf5;
+}
+html[data-jf-dark] { --pg: #111114; --pg-ink: #ffffff; --pg-muted: #98989f; --pg-card: #1c1c1e; --pg-line: #2c2c2e; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--pg); color: var(--pg-ink); font-family: var(--font-mulish); font-size: 14px; }
+.mk-top { max-width: 1180px; margin: 0 auto; padding: 18px 16px 6px; }
+.mk-top h1 { font-family: var(--font-display); font-weight: 400; font-size: 24px; letter-spacing: .04em; margin: 0 0 4px; }
+.mk-top p { margin: 0 0 12px; color: var(--pg-muted); font-size: 13px; line-height: 1.45; max-width: 760px; }
+.mk-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.mk-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mk-group > span { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--pg-muted); margin-right: 2px; }
+.mk-group button { border: 0; border-radius: 999px; padding: 9px 14px; min-height: 36px; background: var(--pg-card); color: var(--pg-ink); font: 700 13px var(--font-mulish); cursor: pointer; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+.mk-group button[aria-pressed="true"] { background: #141742; color: #fff; }
+html[data-jf-dark] .mk-group button[aria-pressed="true"] { background: #fff; color: #141742; }
+.mk-stage { display: flex; justify-content: center; padding: 14px 16px 30px; overflow: hidden; }
+.mk-scaler { flex: none; transform-origin: top left; }
+.mk-device { position: relative; width: max-content; border: 12px solid #111318; border-radius: 40px; background: #111318; box-shadow: 0 24px 60px rgba(12,15,31,.30); }
+.mk-device.is-phone { border-radius: 54px; }
+.m-frame { position: relative; overflow: hidden; border-radius: 28px; background: #f5f8fc; display: flex; flex-direction: column; }
+.mk-device.is-phone .m-frame { border-radius: 42px; }
+html[data-jf-dark] .m-frame { background: #000; }
+.mk-home { flex: 1; overflow: hidden; padding: 22px 16px 0; display: flex; flex-direction: column; gap: 11px; max-width: 560px; width: 100%; margin: 0 auto; }
+.mk-hello .jsc-eyebrow { margin-bottom: 4px; }
+.mk-hello h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; letter-spacing: .04em; color: #141519; }
+html[data-jf-dark] .mk-hello h2 { color: #fff; }
+.mk-card { background: #fff; border: 1px solid #e3ecf5; border-radius: 20px; padding: 17px; box-shadow: 0 10px 26px -16px rgba(20,23,66,.14); display: flex; flex-direction: column; gap: 8px; }
+html[data-jf-dark] .mk-card { background: #1c1c1e; border-color: #2c2c2e; box-shadow: none; }
+.mk-card b { font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: .04em; color: #141519; }
+html[data-jf-dark] .mk-card b { color: #fff; }
+.mk-card i { font-style: normal; font-size: 13.5px; color: #3c3f49; line-height: 1.5; }
+html[data-jf-dark] .mk-card i { color: #d1d1d6; }
+.mk-bar { height: 6px; border-radius: 6px; background: #e7ebf2; overflow: hidden; } .mk-bar > span { display: block; height: 100%; background: #141742; border-radius: 6px; }
+html[data-jf-dark] .mk-bar { background: #2c2c2e; } html[data-jf-dark] .mk-bar > span { background: #fff; }
+.mk-dock { display: flex; justify-content: space-around; padding: 10px 12px 22px; background: rgba(255,255,255,.86); border-top: 1px solid #ecEEF2; font-size: 11px; font-weight: 700; color: #7d8292; }
+.mk-dock span:first-child { color: #141742; }
+html[data-jf-dark] .mk-dock { background: rgba(28,28,30,.9); border-top-color: #2c2c2e; }
+html[data-jf-dark] .mk-dock span:first-child { color: #fff; }
+.mk-notes { max-width: 760px; margin: 0 auto; padding: 0 16px 40px; color: var(--pg-muted); font-size: 13px; line-height: 1.5; }
+.mk-notes b { color: var(--pg-ink); }
+.mk-notes ul { padding-left: 18px; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<div class="mk-top">
+  <h1>Session checklist, in the client's view</h1>
+  <p>What a trainer sees on the iPad while they're in a client's JF Coach. Only the trainer sees the bubble on the right. Tap it, tick a line, tap a line to see how. Made-up clients; the words come straight from the built rules.</p>
+  <div class="mk-controls">
+    <div class="mk-group" id="mk-scenario"><span>Client</span></div>
+    <div class="mk-group" id="mk-device"><span>Device</span><button data-v="ipad" aria-pressed="true">iPad</button><button data-v="phone" aria-pressed="false">Phone</button></div>
+    <div class="mk-group" id="mk-theme"><span>Theme</span><button data-v="light" aria-pressed="true">Light</button><button data-v="dark" aria-pressed="false">Dark</button></div>
+  </div>
+</div>
+<div class="mk-stage"><div class="mk-scaler" id="mk-scaler">
+  <div class="mk-device" id="mk-device-frame">
+    <div class="m-frame" id="frame">
+      <div class="mk-home">
+        <div class="mk-hello"><div class="jsc-eyebrow">Mon 16 Nov</div><h2 id="mk-hello">Good morning</h2></div>
+        <div class="mk-card"><div class="jsc-eyebrow">Today</div><b>Upper body strength</b><i>6 exercises · about 45 minutes</i></div>
+        <div class="mk-card"><div class="jsc-eyebrow">This week</div><b>2 of 3 workouts</b><div class="mk-bar"><span style="width:66%"></span></div></div>
+        <div class="mk-card"><div class="jsc-eyebrow">Food</div><b>1,240 of 1,900 cal</b><div class="mk-bar"><span style="width:65%"></span></div></div>
+        <div class="mk-card"><div class="jsc-eyebrow">Habits</div><b>Walk 8,000 steps</b><i>Tick it off when you're done today.</i></div>
+      </div>
+      <div class="mk-dock"><span>Home</span><span>Training</span><span>Food</span><span>Progress</span><span>More</span></div>
+      <div id="checklist-root"></div>
+    </div>
+  </div>
+</div></div>
+<div class="mk-notes">
+  <b>What you're looking at</b>
+  <ul>
+    <li>The bubble shows how many things are due, and pulses while a session with this client is on now. With nothing due it goes quiet (try "Everything up to date").</li>
+    <li>The score is the Trainer Portal's own Client Health Score, with the portal's colours. No portal score = "No score yet" and the reason.</li>
+    <li>Up to 5 lines holding the score back, then this session's lines. A Kickstart client's third session books the strategy session; their other sessions get them onto their first solo workout.</li>
+    <li>Ticked lines sink to the bottom. A tick is a note for today; it never changes the score.</li>
+    <li>Gabrielle's items get their own section once they're connected to JF Coach (not yet).</li>
+  </ul>
+</div>
+<script>
+const SCENARIOS = [{"name":"Ongoing client, session on now","data":{"ok":true,"client":{"userID":1,"firstName":"Casey"},"score":{"value":62,"band":"amber","colour":"#f59e0b","label":"Solid","asOf":"2026-11-16 06:00:00","source":"Trainer Portal"},"scoreReason":null,"session":{"startsAt":"2026-11-16 10:00:00","endsAt":"2026-11-16 10:45:00","type":"PT Session","number":41,"onNow":true,"kickstart":false},"lines":[{"key":"solo_week","section":"score","title":"Plan a solo workout for this week","how":"No solo workout in the last 2 weeks. Ask which day suits them to train on their own and show them that day's workout in Training.","why":"Solo workouts are the biggest part of the health score a client controls.","link":"/m/workouts","done":false,"auto":false},{"key":"checkin","section":"score","title":"Get their weekly check-in done","how":"Their last check-in was 12 days ago. Ask them to open Check-in on their phone and do this week's with you now.","why":"The weekly check-in counts toward their health score every week.","link":null,"done":false,"auto":false},{"key":"measurements","section":"score","title":"Measurements are due","how":"Last measured 51 days ago. Measure waist, hips and chest at the end of the session and add them in Progress.","why":"Measurements are due every 6 weeks.","link":"/m/progress","done":false,"auto":false},{"key":"meal_guide","section":"score","title":"Fill out their meal guide","how":"Their meal guide hasn't been made yet. Go through the meal guide questions in Food with them so it can be built.","why":"Their meal guide is how they know what to eat between sessions.","link":"/m/meals","done":false,"auto":false},{"key":"push","section":"score","title":"Get them to turn on notifications","how":"Ask them to open JF Coach on their own phone, go to Profile, Settings, Notifications and switch them on.","why":"Without notifications they miss the reminders that keep them on track.","link":null,"done":false,"auto":false}],"gabrielle":{"available":false,"items":[],"reason":"Gabrielle's items for this client aren't connected to JF Coach yet."}}},{"name":"Kickstart, third session","data":{"ok":true,"client":{"userID":1,"firstName":"Priya"},"score":null,"scoreReason":"The Trainer Portal has no health score for them yet.","session":{"startsAt":"2026-11-16 10:00:00","endsAt":"2026-11-16 10:45:00","type":"Kickstart Session","number":3,"onNow":true,"kickstart":true},"lines":[{"key":"solo_first","section":"score","title":"Get them to try their first solo workout","how":"Ask if they've tried a solo workout before. Open Training together and show them the workout waiting for their next free day.","why":"Solo workouts are the biggest part of the health score a client controls.","link":"/m/workouts","done":false,"auto":false},{"key":"checkin","section":"score","title":"Get their weekly check-in done","how":"They haven't done a check-in yet. Ask them to open Check-in on their phone and do it with you now. It takes about two minutes.","why":"The weekly check-in counts toward their health score every week.","link":null,"done":false,"auto":false},{"key":"meal_guide","section":"score","title":"Fill out their meal guide","how":"Their meal guide hasn't been made yet. Go through the meal guide questions in Food with them so it can be built.","why":"Their meal guide is how they know what to eat between sessions.","link":"/m/meals","done":false,"auto":false},{"key":"food_first","section":"score","title":"Get them to track their first meal","how":"Ask them to log their last meal in Food on their phone while you're there, so they see how quick it is.","why":"Logging food adds to their health score.","link":null,"done":false,"auto":false},{"key":"meal_scan","section":"score","title":"Get them to try the meal scan","how":"Have them open Food on their phone and take a photo of their next meal. The app works out what's in it for them.","why":"The meal scan is the fastest way to log food, so they keep doing it.","link":null,"done":false,"auto":false},{"key":"ksp_strategy","section":"session","title":"Book their strategy session","how":"This is session 3 of their Kickstart. Agree a day and time for their Fitness Strategy Session before they leave, then book it in your calendar.","why":"Every Kickstart client books their strategy session at their third session.","link":null,"done":false,"auto":false}],"gabrielle":{"available":false,"items":[],"reason":"Gabrielle's items for this client aren't connected to JF Coach yet."}}},{"name":"Kickstart, second session","data":{"ok":true,"client":{"userID":1,"firstName":"Noah"},"score":{"value":48,"band":"amber","colour":"#f59e0b","label":"Building","asOf":"2026-11-16 06:00:00","source":"Trainer Portal"},"scoreReason":null,"session":{"startsAt":"2026-11-16 17:30:00","endsAt":"2026-11-16 18:15:00","type":"Kickstart Session","number":2,"onNow":false,"kickstart":true},"lines":[{"key":"push","section":"score","title":"Get them to turn on notifications","how":"Ask them to open JF Coach on their own phone, go to Profile, Settings, Notifications and switch them on.","why":"Without notifications they miss the reminders that keep them on track.","link":null,"done":false,"auto":false},{"key":"first_solo","section":"session","title":"Get them onto their first solo workout","how":"Ask if they've tried a solo workout before. Open Training together, find their next workout and show them how to tick off a set.","why":"Solo workouts are the biggest part of the health score a client controls.","link":"/m/workouts","done":false,"auto":false}],"gabrielle":{"available":false,"items":[],"reason":"Gabrielle's items for this client aren't connected to JF Coach yet."}}},{"name":"Everything up to date","data":{"ok":true,"client":{"userID":1,"firstName":"Jordan"},"score":{"value":91,"band":"green","colour":"#22c55e","label":"Crushing it","asOf":"2026-11-16 06:00:00","source":"Trainer Portal"},"scoreReason":null,"session":null,"lines":[],"gabrielle":{"available":false,"items":[],"reason":"Gabrielle's items for this client aren't connected to JF Coach yet."}}}];
+const LINK_LABEL = { "/m/workouts": "Open Training", "/m/progress": "Open Progress", "/m/meals": "Open Food", "/m/checkin": "Open Check-in", "/m/habits": "Open Habits" };
+const DEVICES = { ipad: { w: 820, h: 1180 }, phone: { w: 390, h: 844 } };
+const state = { scenario: 0, device: "ipad", panel: false, openKey: null, data: null };
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function ordered(lines) { return [...lines.filter((l) => !l.done), ...lines.filter((l) => l.done)]; }
+function timeLabel(local) { const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(local || ""); if (!m) return ""; const h = Number(m[4]); return `${((h + 11) % 12) + 1}${Number(m[5]) ? `:${m[5]}` : ""}${h < 12 ? "am" : "pm"}`; }
+function asOfLabel(asOf) { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(asOf || ""); if (!m) return ""; const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])); return `${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getUTCDay()]} ${d.getUTCDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()]}`; }
+function ring(value, colour) { const r = 30, c = 2 * Math.PI * r; return `<svg class="jsc-ring" width="76" height="76" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="${r}" fill="none" stroke="${colour}" stroke-opacity=".16" stroke-width="7"/><circle cx="38" cy="38" r="${r}" fill="none" stroke="${colour}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(Math.max(0, Math.min(100, value)) / 100) * c} ${c}" transform="rotate(-90 38 38)"/><text x="38" y="38" text-anchor="middle" dominant-baseline="central" class="jsc-ring-num" fill="${colour}">${value}</text></svg>`; }
+const TICK = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 9.5l3.2 3.2L14 5.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEV = '<svg class="jsc-chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function lineRow(line) {
+  const open = state.openKey === line.key;
+  return `<li class="jsc-line${line.done ? " is-done" : ""}${open ? " is-open" : ""}"><div class="jsc-line-head">
+    <button type="button" class="jsc-tick" data-tick="${esc(line.key)}" aria-pressed="${line.done}" ${line.auto ? "disabled" : ""} aria-label="${line.done ? "Mark not done" : "Mark done"}">${TICK}</button>
+    <button type="button" class="jsc-line-title" data-open="${esc(line.key)}" aria-expanded="${open}"><span>${esc(line.title)}</span>${CHEV}</button></div>
+    ${open ? `<div class="jsc-how"><p class="jsc-how-text">${esc(line.how)}</p><p class="jsc-why">${esc(line.why)}</p>${line.link && LINK_LABEL[line.link] ? `<button type="button" class="jsc-go" data-go="1">${LINK_LABEL[line.link]}</button>` : ""}</div>` : ""}</li>`;
+}
+function render() {
+  const d = state.data, root = document.getElementById("checklist-root");
+  document.getElementById("mk-hello").textContent = `Good morning, ${d.client.firstName}`;
+  const all = [...d.lines, ...(d.gabrielle.available ? d.gabrielle.items : [])];
+  const openCount = all.filter((l) => !l.done).length;
+  const s = d.session, name = d.client.firstName || "Client";
+  let html = `<button type="button" class="jsc-bubble${openCount ? "" : " is-quiet"}${s && s.onNow && openCount ? " is-live" : ""}" id="bubble" aria-expanded="${state.panel}" aria-label="Session checklist for ${esc(name)}">
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4L6 9l5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>${openCount ? `<span class="jsc-count">${openCount}</span>` : ""}</button>`;
+  if (state.panel) {
+    const sections = [
+      { key: "score", label: "Holding their score back", lines: ordered(d.lines.filter((l) => l.section === "score")) },
+      { key: "session", label: "This session", lines: ordered(d.lines.filter((l) => l.section === "session")) },
+      { key: "gabrielle", label: "From Gabrielle", lines: d.gabrielle.available ? ordered(d.gabrielle.items) : [] },
+    ].filter((x) => x.lines.length);
+    const score = d.score
+      ? `${ring(d.score.value, d.score.colour)}<div class="jsc-score-text"><div class="jsc-eyebrow">Health score</div><div class="jsc-score-label" style="color:${d.score.colour}">${esc(d.score.label)}</div><div class="jsc-note">From the Trainer Portal${asOfLabel(d.score.asOf) ? `, ${asOfLabel(d.score.asOf)}` : ""}</div></div>`
+      : `<div class="jsc-score-text"><div class="jsc-eyebrow">Health score</div><div class="jsc-score-label">No score yet</div><div class="jsc-note">${esc(d.scoreReason || "The Trainer Portal has no health score for them yet.")}</div></div>`;
+    html += `<div class="jsc-layer" id="layer"><section class="jsc-panel" role="dialog" aria-modal="true" aria-labelledby="jsc-title">
+      <header class="jsc-head"><div><div class="jsc-eyebrow">Session checklist · trainer only</div><h2 id="jsc-title" class="jsc-title">${esc(name)}</h2></div>
+      <button type="button" class="jsc-close" id="close" aria-label="Close checklist"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></header>
+      <div class="jsc-body"><div class="jsc-card jsc-score">${score}</div>
+      ${s ? `<div class="jsc-card jsc-session${s.onNow ? " is-live" : ""}"><div class="jsc-eyebrow">${s.onNow ? "On now" : `Today at ${timeLabel(s.startsAt)}`}</div><div class="jsc-session-line">${s.kickstart ? `Kickstart session ${s.number}` : esc(s.type || "Session")}</div></div>` : ""}
+      ${sections.length === 0 ? `<div class="jsc-card jsc-empty"><div class="jsc-empty-title">Nothing due. Nice work.</div><div class="jsc-note">Everything on their list is up to date.</div></div>`
+        : sections.map((x) => `<div class="jsc-card"><div class="jsc-eyebrow">${x.label}</div><ul class="jsc-lines">${x.lines.map(lineRow).join("")}</ul></div>`).join("")}
+      </div></section></div>`;
+  }
+  root.innerHTML = html;
+}
+function pick(i) { state.scenario = i; state.data = JSON.parse(JSON.stringify(SCENARIOS[i].data)); state.openKey = null; state.panel = i !== 3 ? state.panel : state.panel; render(); syncButtons(); }
+function syncButtons() {
+  document.querySelectorAll("#mk-scenario button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === state.scenario)));
+  document.querySelectorAll("#mk-device button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === state.device)));
+  const dark = document.documentElement.hasAttribute("data-jf-dark");
+  document.querySelectorAll("#mk-theme button").forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.v === "dark") === dark)));
+}
+function fit() {
+  const dev = DEVICES[state.device], frame = document.getElementById("frame"), device = document.getElementById("mk-device-frame");
+  frame.style.width = dev.w + "px"; frame.style.height = dev.h + "px";
+  device.classList.toggle("is-phone", state.device === "phone");
+  const avail = Math.min(document.documentElement.clientWidth - 32, 1180);
+  const scale = Math.min(1, avail / (dev.w + 24), (Math.max(620, window.innerHeight) - 40) / (dev.h + 24));
+  const scaler = document.getElementById("mk-scaler");
+  scaler.style.transform = `scale(${scale})`; scaler.style.height = (dev.h + 24) * scale + "px"; scaler.style.width = (dev.w + 24) * scale + "px";
+  scaler.style.transformOrigin = "top left";
+}
+document.getElementById("mk-scenario").insertAdjacentHTML("beforeend", SCENARIOS.map((s, i) => `<button data-i="${i}" aria-pressed="false">${esc(s.name)}</button>`).join(""));
+document.getElementById("mk-scenario").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (b) pick(Number(b.dataset.i)); });
+document.getElementById("mk-device").addEventListener("click", (e) => { const b = e.target.closest("button[data-v]"); if (b) { state.device = b.dataset.v; fit(); syncButtons(); } });
+document.getElementById("mk-theme").addEventListener("click", (e) => { const b = e.target.closest("button[data-v]"); if (!b) return; if (b.dataset.v === "dark") document.documentElement.setAttribute("data-jf-dark", ""); else document.documentElement.removeAttribute("data-jf-dark"); syncButtons(); });
+document.getElementById("checklist-root").addEventListener("click", (e) => {
+  const t = e.target;
+  if (t.closest("#bubble")) { state.panel = true; render(); return; }
+  if (t.closest("#close") || t.id === "layer") { state.panel = false; render(); return; }
+  const tick = t.closest("[data-tick]"); if (tick && !tick.disabled) { const l = state.data.lines.find((x) => x.key === tick.dataset.tick); if (l && !l.auto) { l.done = !l.done; render(); } return; }
+  const open = t.closest("[data-open]"); if (open) { state.openKey = state.openKey === open.dataset.open ? null : open.dataset.open; render(); return; }
+  if (t.closest("[data-go]")) { state.panel = false; render(); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && state.panel) { state.panel = false; render(); } });
+window.addEventListener("resize", fit);
+/* open on the Kickstart third session with one line ticked and one "how" open, so every state is on screen at first look */
+const q = new URLSearchParams(location.search);
+if (q.get("device") === "phone") state.device = "phone";
+if (q.get("theme") === "dark") document.documentElement.setAttribute("data-jf-dark", "");
+pick(Math.min(SCENARIOS.length - 1, Math.max(0, Number(q.get("scenario") ?? 1) || 0)));
+state.panel = q.get("panel") !== "closed";
+const first = state.data.lines.find((l) => l.key === "meal_guide"); if (first && state.scenario === 1) first.done = true;
+state.openKey = q.get("open") || (state.scenario === 1 ? "ksp_strategy" : null); render(); fit(); syncButtons();
+</script>
+</body>
+</html>

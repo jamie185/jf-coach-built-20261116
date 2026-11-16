@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JF Coach: built today</title>
+<style>
+:root{--bg:#f4f5f9;--card:#fff;--ink:#14163a;--ink2:#555a78;--cap:#8388a5;--hair:#e3e5ef;--ai:#5b47e0;--ok:#0f8a5f;--wait:#b26a00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0f1c;--card:#191b2e;--ink:#f1f2fa;--ink2:#b3b7d0;--cap:#8185a3;--hair:#2a2d47;--ai:#9d8cff;--ok:#4fd3a3;--wait:#f0b45a}}
+:root[data-theme="dark"]{--bg:#0e0f1c;--card:#191b2e;--ink:#f1f2fa;--ink2:#b3b7d0;--cap:#8185a3;--hair:#2a2d47;--ai:#9d8cff;--ok:#4fd3a3;--wait:#f0b45a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:56px 16px 72px}
+h1{font-size:clamp(32px,6vw,54px);line-height:1.05;letter-spacing:-.02em;margin:0 0 14px}
+h1 span{color:var(--ai)}
+.sub{font-size:18px;color:var(--ink2);max-width:640px;margin:0 0 36px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+a.card,div.card{display:block;background:var(--card);border-radius:22px;padding:24px 26px;text-decoration:none;color:inherit;box-shadow:0 0 0 1px var(--hair)}
+a.card:hover{box-shadow:0 0 0 2px var(--ai)}
+.k{font-size:12px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--ai);margin-bottom:8px}
+h2{font-size:21px;line-height:1.25;margin:0 0 8px}
+p{margin:0 0 10px;color:var(--ink2);font-size:15px}
+.st{font-size:13px;font-weight:600;color:var(--ok)}
+.st.wait{color:var(--wait)}
+.open{font-size:14px;font-weight:700;color:var(--ai)}
+.note{margin-top:28px;font-size:14px;color:var(--cap)}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Built today.<br><span>Tap one to try it.</span></h1>
+  <p class="sub">Your yeses from the ideas page, as working mock-ups with made-up people. Each one is built in the app and switched off. Nothing here is live for trainers or clients yet.</p>
+  <div class="grid">
+    <a class="card" href="checklist/">
+      <div class="k">Idea 4 · trainer iPad</div>
+      <h2>Session checklist</h2>
+      <p>The bubble on the right of a client's view. Health score, what's holding it back, what to do and how. Kickstart session 3: book the strategy session.</p>
+      <div class="st">Built · switched off</div><div class="open">Open the mock-up →</div>
+    </a>
+    <a class="card" href="insights/">
+      <div class="k">Idea 2 · Progress</div>
+      <h2>JF+ button and Insights graphs</h2>
+      <p>Three graphs on Progress for JF+ members, energy in against out. Trainers can open their own clients' Insights.</p>
+      <div class="st">Built · switched off</div><div class="open">Open the mock-up →</div>
+    </a>
+    <a class="card" href="meals-calendar/">
+      <div class="k">Ideas 3 and 5</div>
+      <h2>Meal guide targets, calendar colours</h2>
+      <p>Target, eaten and left on the meal guide. Moved sessions green and cancelled ones red on the trainer calendar.</p>
+      <div class="st">Built · switched off</div><div class="open">Open the mock-up →</div>
+    </a>
+    <a class="card" href="jfgo/">
+      <div class="k">Ideas 7 and 8 · JF Go</div>
+      <h2>Two ways to a drop</h2>
+      <p>Each way says where it meets a busy road. Plus three of the small items. Nine of the sixteen were already in the app.</p>
+      <div class="st">Built · switched off</div><div class="open">Open the mock-up →</div>
+    </a>
+    <div class="card">
+      <div class="k">Idea 6 · trainer app</div>
+      <h2>Ava inside the trainer app</h2>
+      <p>The same Ava as WhatsApp, as a thread at the top of a trainer's messages.</p>
+      <div class="st wait">Being built</div>
+    </div>
+    <div class="card">
+      <div class="k">Idea 1</div>
+      <h2>Voice notes turned into text</h2>
+      <p>In JF Coach chat, session notes and JF Notes.</p>
+      <div class="st wait">Being built</div>
+    </div>
+  </div>
+  <p class="note">Mon 16 Nov 2026. Mock-ups show the screens as built; they are not the live app. Each feature goes on for the demo accounts first, then for everyone.</p>
+</div>
+</body>
+</html>
